@@ -1,0 +1,13 @@
+ipykernel==7.4.0
+jupyter
+matplotlib==3.11.2
+nbconvert==7.17.1
+nibabel==5.4.2
+numpy==2.5.2
+pandas==3.0.6
+scikit-image==0.26.0
+scikit-learn==1.9.1
+scipy==1.18.1
+statsmodels==0.15.0
+tifffile==2026.9.20
+pytest==8.4.2

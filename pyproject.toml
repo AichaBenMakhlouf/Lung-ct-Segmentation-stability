@@ -1,0 +1,19 @@
+[project]
+name = "lungct"
+version = "1.0.0"
+description = "Training stability and architecture comparison in deep learning-based lung CT segmentation"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+authors = [
+  { name = "Aicha Ben Makhlouf", email = "a.benmakhlouf@qu.edu.sa" },
+  { name = "Nessrine Elloumi" },
+  { name = "Borhen Louhichi" },
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
