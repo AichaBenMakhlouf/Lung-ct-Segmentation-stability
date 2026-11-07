@@ -1,10 +1,7 @@
 # Training stability and architecture comparison in deep learning-based lung CT segmentation
 
-[![tests](https://github.com/<user>/lung-ct-segmentation-stability/actions/workflows/tests.yml/badge.svg)](https://github.com/<user>/lung-ct-segmentation-stability/actions/workflows/tests.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
 Code for the article *"Training stability and architecture comparison in deep learning-based lung CT
-segmentation"* by Aicha Ben Makhlouf, Nessrine Elloumi and Borhen Louhichi (submitted to *PeerJ
+segmentation"* (submitted to *PeerJ
 Computer Science*).
 
 The code trains 2D lung segmentation networks on chest CT slices from the public COVID-19-CT-Seg
@@ -137,8 +134,7 @@ figures (`results/figures/fig4_*` to `fig13_*`, PNG and PDF). See
 
 Please cite the article and the dataset if you use this code (see [CITATION.cff](CITATION.cff)):
 
-> Ben Makhlouf A., Elloumi N., Louhichi B. Training stability and architecture comparison in deep
-> learning-based lung CT segmentation. Submitted to *PeerJ Computer Science*.
+> Training stability and architecture comparison in deep learning-based lung CT segmentation. Submitted to *PeerJ Computer Science*.
 
 > Ma J. et al. (2020). COVID-19 CT Lung and Infection Segmentation Dataset (Version 1.0). Zenodo.
 > https://doi.org/10.5281/zenodo.3757476
