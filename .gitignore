@@ -1,31 +1,18 @@
-# Dataset (downloaded or generated; never committed)
-data/raw/*
-data/processed/*
-!data/**/.gitkeep
-
-# Training outputs
-results/runs/*
-!results/runs/.gitkeep
-results/logs/
-results/figures/supplementary/
-*.npz
-*.pt
-*.pth
+# Dataset (download from Zenodo, see README) and derived slices: not redistributed
+00_inputs/covid19_ct_seg/COVID-19-CT-Seg_20cases/
+00_inputs/covid19_ct_seg/Lung_Mask/
+00_inputs/covid19_ct_seg/data/
 *.nii
 *.nii.gz
-*.tif
 
-# Python and Jupyter
+# Saved predictions containing CT data (Figure 12), checkpoints and logs
+07_analysis_outputs/covid19_ct_seg/results/qualitative/
+07_analysis_outputs/covid19_ct_seg/checkpoints/
+07_analysis_outputs/covid19_ct_seg/logs/
+
+# Python / Jupyter
 __pycache__/
-*.py[cod]
-*.egg-info/
-.pytest_cache/
+*.pyc
 .ipynb_checkpoints/
-.venv/
 venv/
-
-# Operating system and editors
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
+.venv/

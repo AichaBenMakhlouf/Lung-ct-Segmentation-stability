@@ -1,0 +1,75 @@
+# Configuration for the Lug Method study re-run on Zenodo COVID-19-CT-Seg (record 3757476).
+# Select with:  $env:LUG_CONFIG = "config_covid.yaml"   (identical to config.yaml except paths)
+
+paths:
+  data_raw:        "../00_inputs/covid19_ct_seg/data"   # 2d_images/ 2d_masks/ (convert_covid_ct_seg.py)
+  lung_stats_csv:  "../00_inputs/covid19_ct_seg/data/lung_stats.csv"
+  dataset_index:   "../00_inputs/covid19_ct_seg/data/dataset_index.csv"
+  outputs:         "../07_analysis_outputs/covid19_ct_seg"
+  figures:         "../07_analysis_outputs/covid19_ct_seg/figures"
+  tables:          "../07_analysis_outputs/covid19_ct_seg/tables"
+  logs:            "../07_analysis_outputs/covid19_ct_seg/logs"
+  checkpoints:     "../07_analysis_outputs/covid19_ct_seg/checkpoints"
+
+data:
+  n_expected: 267
+  native_size: 512
+  mask_positive_threshold: 0            # mask > 0 => foreground
+  # HU windowing for the CORRECTED arm (lung window). Faithful arm ignores this.
+  hu_window_center: -600
+  hu_window_width:  1500
+
+faithful_pipeline:                      # O1 — reproduce the released notebook exactly
+  input_size: 256
+  normalisation: "divide_255"           # the released (buggy on int16 HU) behaviour
+  split: "random_slice"
+  val_fraction: 0.20
+  seed: null                            # released code passes no random_state
+  loss: "bce"
+  optimizer: "adam"
+  lr: 0.001
+  batch_size: 10
+  epochs: 20
+  callbacks: ["reduce_lr_on_plateau"]   # patience 10, factor 0.2, min_lr 1e-5
+  early_stopping: false
+  model_selection: "last_epoch"
+  dice_metric: "soft"                   # released metric: no threshold
+
+corrected_pipeline:                     # O3+ — honest protocol
+  input_size: 256                       # 512 tested in sensitivity
+  normalisation: "hu_window_minmax"
+  split: "random_slice"                 # true patient CV unavailable; see protocol
+  val_fraction: 0.20
+  inner_val_fraction: 0.20              # of the training part, for model selection + threshold
+  loss: "bce_dice"                      # BCE/Dice/Tversky compared in ablation
+  optimizer: "adam"
+  lr: 0.001
+  scheduler: "cosine"
+  epochs: 80
+  batch_size: 8
+  early_stopping_patience: 15
+  model_selection: "best_inner_val_dice"
+  threshold: "tuned_on_inner_val"       # 0.5 tested in sensitivity
+  augmentation: "full"                  # none/light/full compared in ablation
+
+architectures: ["unet", "attn_unet", "resunet", "resunetpp"]
+
+experiments:
+  gap_decomposition_seeds: 20
+  architecture_grid_seeds: 5
+  leakage_probe_seeds: 20
+  z_blocked_k: [4, 8]
+
+pre_registered_margins:                 # from protocol.md "Hypotheses" — SUBJECT TO USER SIGN-OFF
+  H1_reported_actual_gap_min: 0.12
+  H1a_metric_confusion_min:   0.10
+  H1b_hu_fix_gain_min:        0.03
+  H1c_augmentation_gain_min:  0.02
+  H1d_seed_sd_min:            0.02
+  H2_tost_margin:             0.02
+  H4_zblock_drop_min:         0.03
+
+compute:
+  device: "cuda"                        # NVIDIA GTX 1650 (4 GB)
+  amp: true
+  num_workers: 2

@@ -1,0 +1,119 @@
+==============================================================================
+PHASE 7 STATISTICAL ANALYSIS -- COVID-19-CT-Seg re-run (10 patients, 267 slices)
+==============================================================================
+
+
+########## A. O1 -- baseline recipe, seed variability ##########
+
+Gradient-accumulation engine (micro-batches of 4, 3 per step -> 12 slices per optimizer step), n=20 seeds
+  held-out Dice@0.5 : mean 0.9735  95%CI [0.9689, 0.9776]  SD 0.0103
+  range [0.9470, 0.9861]  median 0.9769
+  collapses (Dice<0.80): 0/20  (Wilson 95%CI [0.00, 0.16])
+  held-out soft Dice : mean 0.9585  SD 0.0157
+  held-out accuracy  : mean 0.9943  SD 0.0022
+  final-epoch train loss (the 'reported-like' row): mean 0.0147
+  Literal batch 10 (8 seeds): see section G.
+
+
+########## B. O2 -- progressive protocol (4 arms, seed-paired) ##########
+
+Per-arm held-out Dice:
+  A_faithful         mean 0.9748  median 0.9777  95%CI [0.9692,0.9794]  SD 0.0096  min 0.9558  collapse 0/12
+  B_heldout_thresh   mean 0.9823  median 0.9845  95%CI [0.9802,0.9841]  SD 0.0037  min 0.9752  collapse 0/12
+  C_hu_window        mean 0.9800  median 0.9814  95%CI [0.9767,0.9827]  SD 0.0056  min 0.9684  collapse 0/12
+  D_augmentation     mean 0.9823  median 0.9842  95%CI [0.9802,0.9843]  SD 0.0038  min 0.9754  collapse 0/12
+
+Paired step deltas (same seed; Wilcoxon signed-rank + paired bootstrap 95% CI, Holm):
+  A_faithful->B_heldout_thresh       Δ +0.0075  95%CI [+0.0021,+0.0135]  p=0.0522 (Holm 0.085)  improved 9/12  SD 0.0096->0.0037
+  B_heldout_thresh->C_hu_window      Δ -0.0023  95%CI [-0.0044,-0.0006]  p=0.0122 (Holm 0.0366)  improved 2/12  SD 0.0037->0.0056
+  C_hu_window->D_augmentation        Δ +0.0024  95%CI [+0.0005,+0.0044]  p=0.0425 (Holm 0.085)  improved 10/12  SD 0.0056->0.0038
+  A_faithful->D_augmentation         Δ +0.0076  95%CI [+0.0017,+0.0143]  p=0.0342  improved 10/12  SD 0.0096->0.0038
+
+Across-seed variability (Levene, median-centred) and SD ratio with bootstrap 95% CI:
+  A_faithful vs B_heldout_thresh: SD 0.0096 vs 0.0037  ratio 2.58x [1.07, 6.01]  Levene p=0.0771
+  A_faithful vs C_hu_window: SD 0.0096 vs 0.0056  ratio 1.72x [0.68, 4.07]  Levene p=0.236
+  B_heldout_thresh vs C_hu_window: SD 0.0037 vs 0.0056  ratio 0.67x [0.29, 1.54]  Levene p=0.387
+
+
+########## C. O3 -- architecture comparison & equivalence ##########
+
+n images (held out at least once in every architecture) = 183 ; architectures = ['attn_unet', 'resunet', 'resunetpp', 'unet']
+
+Run-level (5 seeds each):
+  attn_unet    Dice 0.9856 +/- 0.0007  IoU 0.9716  acc 0.9967  ECE 0.0018  462 s/run
+  resunet      Dice 0.9863 +/- 0.0004  IoU 0.9730  acc 0.9969  ECE 0.0017  461 s/run
+  resunetpp    Dice 0.9863 +/- 0.0006  IoU 0.9730  acc 0.9969  ECE 0.0015  813 s/run
+  unet         Dice 0.9859 +/- 0.0005  IoU 0.9722  acc 0.9968  ECE 0.0019  417 s/run
+
+Friedman (per-image, k=4, n=183): chi2=16.207  p=0.001029
+  mean ranks: attn_unet 2.79  resunet 2.25  resunetpp 2.45  unet 2.51   Nemenyi CD = 0.347
+
+Pairwise: paired bootstrap Δ (per-image Dice), Wilcoxon (Holm), TOST at ±0.02 on the 90% CI:
+  attn_unet vs resunet     Δ -0.0035  90%CI [-0.0103,+0.0025]  p=7.27e-05 (Holm 0.000436)  Nemenyi sig: True  TOST equiv: True
+  attn_unet vs resunetpp   Δ -0.0060  90%CI [-0.0129,+0.0003]  p=0.00605 (Holm 0.0303)  Nemenyi sig: False  TOST equiv: True
+  attn_unet vs unet        Δ -0.0037  90%CI [-0.0096,+0.0016]  p=0.0146 (Holm 0.0583)  Nemenyi sig: False  TOST equiv: True
+  resunet vs resunetpp     Δ -0.0025  90%CI [-0.0071,+0.0015]  p=0.711 (Holm 1)  Nemenyi sig: False  TOST equiv: True
+  resunet vs unet          Δ -0.0001  90%CI [-0.0059,+0.0047]  p=0.0884 (Holm 0.265)  Nemenyi sig: False  TOST equiv: True
+  resunetpp vs unet        Δ +0.0023  90%CI [-0.0044,+0.0095]  p=0.651 (Holm 1)  Nemenyi sig: False  TOST equiv: True
+
+  All pairs TOST-equivalent at ±0.02: True
+  max |Δ| = 0.0060;  ResUNet++ / U-Net time ratio = 1.95x
+
+
+########## D. O5 -- failure-mode regression (per-image Dice ~ covariates) ##########
+
+Fractional-response GLM (logit), cluster-robust by image; n_obs=1080, n_images=183, n_patients=10:
+  lung_volume_fraction_z     beta +0.578  95%CI [+0.339,+0.817]  p=2.21e-06 (Holm 4.43e-06)
+  lung_mean_hu_z             beta -0.934  95%CI [-1.045,-0.823]  p=4.81e-61 (Holm 1.44e-60)
+  abs_z_dev_z                beta -0.161  95%CI [-0.371,+0.050]  p=0.135 (Holm 0.135)
+
+Fractional-response GLM (logit), cluster-robust by patient; n_obs=1080, n_images=183, n_patients=10:
+  lung_volume_fraction_z     beta +0.578  95%CI [+0.141,+1.015]  p=0.00951 (Holm 0.019)
+  lung_mean_hu_z             beta -0.934  95%CI [-1.052,-0.816]  p=3.89e-54 (Holm 1.17e-53)
+  abs_z_dev_z                beta -0.161  95%CI [-0.488,+0.167]  p=0.337 (Holm 0.337)
+
+Tertile means of image-level Dice (averaged over archs + seeds):
+  lung_volume_fraction: low 0.8768 (n=61)  mid 0.9864 (n=61)  high 0.9881 (n=61)
+  lung_mean_hu: low 0.9890 (n=61)  mid 0.9851 (n=61)  high 0.8772 (n=61)
+  abs_z_dev: low 0.9868 (n=61)  mid 0.9868 (n=61)  high 0.8778 (n=61)
+
+Per-patient mean held-out Dice (O3 pooled):
+  coronacases_001    mean 0.9838  min 0.9668  (obs 112)
+  coronacases_002    mean 0.9597  min 0.6170  (obs 112)
+  coronacases_003    mean 0.9501  min 0.4964  (obs 100)
+  coronacases_004    mean 0.9859  min 0.9515  (obs 124)
+  coronacases_005    mean 0.9312  min 0.0000  (obs 92)
+  coronacases_006    mean 0.9535  min 0.0800  (obs 132)
+  coronacases_007    mean 0.9683  min 0.3822  (obs 92)
+  coronacases_008    mean 0.8963  min 0.0000  (obs 100)
+  coronacases_009    mean 0.9824  min 0.9386  (obs 92)
+  coronacases_010    mean 0.9077  min 0.0000  (obs 124)
+
+
+########## E. O6 -- split sensitivity: random vs Z-blocked vs leave-one-patient-out ##########
+
+Per (arch, scheme) held-out Dice:
+  resunetpp  patient_lopo  mean 0.9847  95%CI [0.9803,0.9878]  SD 0.0065  min 0.9683  n=10
+  resunetpp  random_slice  mean 0.9856  95%CI [0.9852,0.9860]  SD 0.0006  min 0.9847  n=6
+  resunetpp  z_blocked     mean 0.9836  95%CI [0.9805,0.9868]  SD 0.0044  min 0.9773  n=6
+  unet       patient_lopo  mean 0.9828  95%CI [0.9759,0.9876]  SD 0.0102  min 0.9565  n=10
+  unet       random_slice  mean 0.9853  95%CI [0.9849,0.9858]  SD 0.0006  min 0.9846  n=6
+  unet       z_blocked     mean 0.9841  95%CI [0.9795,0.9871]  SD 0.0056  min 0.9731  n=6
+
+Contrasts (random_slice minus other scheme; pre-specified practical margin 0.03):
+  resunetpp  random - z_blocked    Δ +0.0020  95%CI [-0.0015,+0.0057]  paired Wilcoxon p=0.562  within margin: True
+  resunetpp  random - patient_lopo Δ +0.0009  95%CI [-0.0022,+0.0052]  Mann-Whitney p=0.313  SD 0.0006 vs 0.0061 (x10.1, Levene p=0.164)  within margin: True
+  unet       random - z_blocked    Δ +0.0012  95%CI [-0.0018,+0.0055]  paired Wilcoxon p=1  within margin: True
+  unet       random - patient_lopo Δ +0.0025  95%CI [-0.0024,+0.0093]  Mann-Whitney p=0.562  SD 0.0006 vs 0.0097 (x15.9, Levene p=0.184)  within margin: True
+
+LOPO per held-out patient (Dice):
+  coronacases_001    resunetpp 0.9867  unet 0.9871
+  coronacases_002    resunetpp 0.9863  unet 0.9880
+  coronacases_003    resunetpp 0.9683  unet 0.9565
+  coronacases_004    resunetpp 0.9883  unet 0.9883
+  coronacases_005    resunetpp 0.9889  unet 0.9892
+  coronacases_006    resunetpp 0.9899  unet 0.9895
+  coronacases_007    resunetpp 0.9864  unet 0.9844
+  coronacases_008    resunetpp 0.9884  unet 0.9885
+  coronacases_009    resunetpp 0.9839  unet 0.9772
+  coronacases_010    resunetpp 0.9795  unet 0.9788

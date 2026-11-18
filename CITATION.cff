@@ -1,1 +1,37 @@
-
+cff-version: 1.2.0
+message: "If you use this code, please cite the article and the COVID-19-CT-Seg dataset."
+title: "Training stability and architecture comparison in deep learning-based lung CT segmentation"
+type: software
+authors:
+  - family-names: "Ben Makhlouf"
+    given-names: "Aicha"
+    affiliation: "Department of Computer Science, College of Computer, Qassim University"
+  - family-names: "Elloumi"
+    given-names: "Nessrine"
+    affiliation: "ISSAT Sousse, Sousse University"
+  - family-names: "Louhichi"
+    given-names: "Borhen"
+    affiliation: "Imam Mohammad Ibn Saud Islamic University (IMSIU)"
+repository-code: "https://github.com/AichaBenMakhlouf/Lung-ct-Segmentation-stability"
+license: MIT
+version: "1.0.0"
+references:
+  - type: dataset
+    title: "COVID-19 CT Lung and Infection Segmentation Dataset (Version 1.0)"
+    authors:
+      - family-names: "Ma"
+        given-names: "Jun"
+    year: 2020
+    doi: "10.5281/zenodo.3757476"
+  - type: article
+    title: "Toward data-efficient learning: A benchmark for COVID-19 CT lung and infection segmentation"
+    authors:
+      - family-names: "Ma"
+        given-names: "Jun"
+    journal: "Medical Physics"
+    volume: 48
+    issue: 3
+    start: 1197
+    end: 1210
+    year: 2021
+    doi: "10.1002/mp.14676"

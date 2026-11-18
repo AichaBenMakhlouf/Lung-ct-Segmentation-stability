@@ -1,0 +1,10 @@
+covariate,tertile,mean_dice,n
+lung_volume_fraction,low,0.8768407069245201,61
+lung_volume_fraction,mid,0.9863986611529125,61
+lung_volume_fraction,high,0.9881095442859853,61
+lung_mean_hu,low,0.9889813790230151,61
+lung_mean_hu,mid,0.9851406821217693,61
+lung_mean_hu,high,0.8772268512186334,61
+abs_z_dev,low,0.986787579627962,61
+abs_z_dev,mid,0.9867939613555949,61
+abs_z_dev,high,0.8777673713798609,61
